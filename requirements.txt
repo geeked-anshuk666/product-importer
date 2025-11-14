@@ -3,3 +3,4 @@ psycopg2==2.9.11
 djangorestframework==3.14.0
 celery==5.3.4
 redis==5.0.1
+dj-database-url==3.0.1
