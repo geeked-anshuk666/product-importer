@@ -89,14 +89,20 @@
                                     <thead>
                                         <tr>
                                             <th>ID</th>
+                                            <th>File</th>
                                             <th>Status</th>
                                             <th>Progress</th>
+                                            <th>Rows</th>
+                                            <th>Created</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for upload in recent_uploads %}
                                         <tr>
                                             <td>{{ upload.id }}</td>
+                                            <td>
+                                                <small>{{ upload.file.name|truncatechars:20 }}</small>
+                                            </td>
                                             <td>
                                                 <span class="badge bg-{% if upload.status == 'completed' %}success{% elif upload.status == 'failed' %}danger{% elif upload.status == 'processing' %}warning{% else %}secondary{% endif %}">
                                                     {{ upload.get_status_display }}
@@ -107,6 +113,12 @@
                                                     <div class="progress-bar" role="progressbar" style="width: {{ upload.progress_percentage }}%"></div>
                                                 </div>
                                                 <small>{{ upload.progress_percentage }}%</small>
+                                            </td>
+                                            <td>
+                                                <small>{{ upload.processed_rows }}/{{ upload.total_rows }}</small>
+                                            </td>
+                                            <td>
+                                                <small>{{ upload.created_at|localtime|date:"M d, H:i" }}</small>
                                             </td>
                                         </tr>
                                         {% endfor %}
