@@ -105,7 +105,8 @@ The application is configured for deployment on Render:
    - A worker service for Celery tasks
    - A PostgreSQL database
    - A Redis instance
-5. Click "Create" and Render will deploy the application
+5. **Important**: After deployment, if you encounter "DisallowedHost" errors, add your Render domain to the ALLOWED_HOSTS in `product_importer/settings.py`
+6. Click "Create" and Render will deploy the application
 
 ### Manual Deployment
 
