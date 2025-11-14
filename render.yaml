@@ -2,7 +2,7 @@ services:
   - type: web
     name: product-importer
     env: python
-    buildCommand: "pip install -r requirements.txt"
+    buildCommand: "pip install -r requirements.txt && python manage.py migrate"
     startCommand: "gunicorn product_importer.wsgi:application"
     envVars:
       - key: DATABASE_URL
@@ -21,7 +21,7 @@ services:
   - type: worker
     name: product-importer-worker
     env: python
-    buildCommand: "pip install -r requirements.txt"
+    buildCommand: "pip install -r requirements.txt && python manage.py migrate"
     startCommand: "celery -A product_importer.celery worker --loglevel=info"
     envVars:
       - key: DATABASE_URL
