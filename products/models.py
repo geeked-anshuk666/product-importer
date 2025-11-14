@@ -19,3 +19,4 @@ class Product(models.Model):
             models.Index(fields=['is_active']),
             models.Index(fields=['created_at']),
         ]
+        ordering = ['id']  # Maintain consistent ordering by ID
