@@ -106,7 +106,8 @@ The application is configured for deployment on Render:
    - A PostgreSQL database
    - A Redis instance
 5. **Important**: After deployment, if you encounter "DisallowedHost" errors, add your Render domain to the ALLOWED_HOSTS in `product_importer/settings.py`
-6. Click "Create" and Render will deploy the application
+6. **Note**: Database migrations are automatically run during the build process
+7. Click "Create" and Render will deploy the application
 
 ### Manual Deployment
 
