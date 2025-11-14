@@ -79,8 +79,15 @@ The application can be configured using environment variables:
    ```
 
 2. **Start the Celery worker** (in a separate terminal)
+   
+   On Linux/Mac:
    ```bash
    celery -A product_importer.celery worker --loglevel=info
+   ```
+   
+   On Windows:
+   ```bash
+   python celery_worker_windows.py worker --loglevel=info
    ```
 
 3. **Start Redis** (if not already running)

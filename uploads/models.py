@@ -26,6 +26,9 @@ class Upload(models.Model):
     def progress_percentage(self):
         if self.total_rows > 0:
             return round((self.processed_rows / self.total_rows) * 100, 2)
+        elif self.status == 'processing':
+            # If we're processing but don't have total_rows yet, show some progress
+            return min(90, max(10, self.processed_rows / 10))  # Show some progress based on processed rows
         return 0
         
     class Meta:

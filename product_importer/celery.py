@@ -14,3 +14,11 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 
 # Load task modules from all registered Django apps.
 app.autodiscover_tasks()
+
+# Configure Celery for Windows compatibility
+if os.name == 'nt':
+    # Use Windows-specific settings to avoid multiprocessing issues
+    app.conf.update(
+        worker_pool='solo',  # Use solo pool instead of prefork
+        worker_concurrency=1,  # Limit to 1 concurrent worker
+    )

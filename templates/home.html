@@ -78,10 +78,10 @@
             const formData = new FormData();
             formData.append('file', file);
             
-            // Show progress
+            // Show progress immediately
             $('#uploadProgress').show();
-            $('#progressBar').css('width', '0%');
-            $('#progressText').text('Starting upload...');
+            $('#progressBar').css('width', '5%');
+            $('#progressText').text('Uploading file...');
             
             // Send upload request
             $.ajax({
@@ -91,6 +91,9 @@
                 processData: false,
                 contentType: false,
                 success: function(data) {
+                    // Show that file upload is complete and processing has started
+                    $('#progressBar').css('width', '10%');
+                    $('#progressText').text('File uploaded. Starting processing...');
                     // Start polling for progress
                     pollUploadProgress(data.id);
                 },
@@ -104,15 +107,31 @@
         // Poll for upload progress
         function pollUploadProgress(uploadId) {
             $.get(`/api/uploads/${uploadId}/`, function(data) {
-                const progress = data.progress_percentage || 0;
-                $('#progressBar').css('width', progress + '%');
-                $('#progressText').text(`Processing: ${progress}% (${data.processed_rows}/${data.total_rows})`);
+                let progress = data.progress_percentage || 0;
+                let statusText = '';
                 
                 if (data.status === 'completed') {
+                    $('#progressBar').css('width', '100%');
                     $('#progressText').text('Upload completed successfully!');
                 } else if (data.status === 'failed') {
+                    $('#progressBar').css('width', '100%');
                     $('#progressText').text('Upload failed!');
                 } else {
+                    // Processing in progress
+                    if (data.total_rows > 0) {
+                        statusText = `Processing: ${progress}% (${data.processed_rows}/${data.total_rows})`;
+                    } else {
+                        // Provide some progress indication even without row counts
+                        let fakeProgress = Math.min(90, Math.floor(data.processed_rows / 100));
+                        progress = fakeProgress;
+                        statusText = `Processing: ${fakeProgress}% (counting rows...)`;
+                    }
+                    
+                    // Ensure we show some progress
+                    let displayProgress = Math.max(10, progress);
+                    $('#progressBar').css('width', displayProgress + '%');
+                    $('#progressText').text(statusText);
+                    
                     // Continue polling
                     setTimeout(() => pollUploadProgress(uploadId), 1000);
                 }
