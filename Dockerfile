@@ -36,5 +36,5 @@ RUN adduser --disabled-password --gecos '' appuser
 RUN chown -R appuser:appuser /app
 USER appuser
 
-# Run the application
-CMD ["gunicorn", "product_importer.wsgi:application", "--bind", "0.0.0.0:8000"]
+# Run migrations and start the application
+CMD ["sh", "-c", "python manage.py migrate --noinput && gunicorn product_importer.wsgi:application --bind 0.0.0.0:8000"]

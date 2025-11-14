@@ -30,5 +30,5 @@ RUN adduser --disabled-password --gecos '' appuser
 RUN chown -R appuser:appuser /app
 USER appuser
 
-# Run the Celery worker
-CMD ["celery", "-A", "product_importer.celery", "worker", "--loglevel=info"]
+# Run migrations and start the Celery worker
+CMD ["sh", "-c", "python manage.py migrate --noinput && celery -A product_importer.celery worker --loglevel=info"]
