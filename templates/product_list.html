@@ -308,18 +308,32 @@
         });
         
         $('#confirmBulkDeleteBtn').on('click', function() {
-            $.ajax({
-                url: '/api/products/bulk-delete/',  // Fixed: changed underscore to hyphen
-                method: 'DELETE',
-                success: function() {
+            // Check if there are any products to delete
+            $.get('/api/products/', function(data) {
+                const products = data.results || data;
+                if (!products || products.length === 0) {
                     $('#bulkDeleteModal').modal('hide');
-                    alert('All products deleted successfully!');
-                    loadProducts();
-                },
-                error: function(xhr) {
-                    $('#bulkDeleteModal').modal('hide');
-                    alert('Error deleting products: ' + xhr.responseText);
+                    alert('No products available to delete.');
+                    return;
                 }
+                
+                // Proceed with deletion if products exist
+                $.ajax({
+                    url: '/api/products/bulk-delete/',
+                    method: 'DELETE',
+                    success: function() {
+                        $('#bulkDeleteModal').modal('hide');
+                        alert('All products deleted successfully!');
+                        loadProducts();
+                    },
+                    error: function(xhr) {
+                        $('#bulkDeleteModal').modal('hide');
+                        alert('Error deleting products: ' + xhr.responseText);
+                    }
+                });
+            }).fail(function(xhr) {
+                $('#bulkDeleteModal').modal('hide');
+                alert('Error checking products: ' + xhr.responseText);
             });
         });
         

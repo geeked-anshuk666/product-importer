@@ -173,6 +173,12 @@
             currentWebhookId = button.data('webhook-id');
         });
         
+        // Handle test webhook modal
+        $('#testWebhookModal').on('show.bs.modal', function(event) {
+            const button = $(event.relatedTarget);
+            currentWebhookId = button.data('webhook-id');
+        });
+        
         // Handle save webhook
         $('#saveWebhookBtn').on('click', function() {
             const url = $('#webhookUrl').val();

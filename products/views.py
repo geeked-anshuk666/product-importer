@@ -80,6 +80,14 @@ class ProductRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
 class ProductBulkDeleteView(generics.GenericAPIView):
     def delete(self, request, *args, **kwargs):
         count = Product.objects.count()
+        
+        # Handle edge case when there are no products
+        if count == 0:
+            return Response(
+                {'message': 'No products to delete'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         Product.objects.all().delete()
         
         # Send webhook notification
