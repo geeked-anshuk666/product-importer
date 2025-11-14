@@ -37,9 +37,11 @@ def extract_product_data(row):
     name = None
     description = ""
     
-    # Common field name variations
-    sku_fields = ['sku', 'product_sku', 'product-id', 'product_id', 'id', 'item_sku']
-    name_fields = ['name', 'product_name', 'title', 'product-title', 'item_name']
+    # Common field name variations for SKU
+    sku_fields = ['uniq_id', 'sku', 'product_sku', 'product-id', 'product_id', 'id', 'item_sku', 'pid']
+    # Common field name variations for name
+    name_fields = ['product_name', 'name', 'title', 'product-title', 'item_name']
+    # Common field name variations for description
     desc_fields = ['description', 'desc', 'product_description', 'item_description']
     
     # Try to find fields by name (case insensitive)
@@ -58,12 +60,13 @@ def extract_product_data(row):
     if sku is None or name is None:
         values = [v.strip() if v else "" for v in row.values()]
         if len(values) >= 2:
+            # For this specific file format, the first column is uniq_id and second is product_name
             if sku is None and values[0]:
                 sku = values[0].lower()
-            if name is None and values[1]:
-                name = values[1]
-            if len(values) > 2 and not description:
-                description = values[2]
+            if name is None and values[3]:  # product_name is the 4th column (index 3)
+                name = values[3]
+            if len(values) > 5 and not description:  # description might be in later columns
+                description = values[5]
     
     return sku, name, description
 
