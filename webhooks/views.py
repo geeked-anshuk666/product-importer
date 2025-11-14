@@ -1,3 +1,6 @@
+from typing import TypeAlias
+
+
 from django.shortcuts import render
 from django.utils import timezone
 from rest_framework import generics, status
@@ -22,7 +25,7 @@ class WebhookRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
 
 class WebhookTestView(generics.GenericAPIView):
     queryset = Webhook.objects.all()
-    serializer_class = WebhookSerializer
+    serializer_class: TypeAlias = WebhookSerializer
     
     def post(self, request, *args, **kwargs):
         webhook_id = kwargs.get('pk')
