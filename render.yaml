@@ -6,14 +6,26 @@ services:
     dockerContext: .
     healthCheckPath: /
     envVars:
-      - key: DATABASE_URL
+      - key: DB_HOST
         fromDatabase:
           name: product-importer-db
-          property: connectionString
-      - key: RENDER_DATABASE_URL
+          property: host
+      - key: DB_PORT
         fromDatabase:
           name: product-importer-db
-          property: connectionString
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: product-importer-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: product-importer-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: product-importer-db
+          property: password
       - key: REDIS_URL
         fromService:
           name: product-importer-redis
@@ -29,14 +41,26 @@ services:
     dockerfilePath: Dockerfile.worker
     dockerContext: .
     envVars:
-      - key: DATABASE_URL
+      - key: DB_HOST
         fromDatabase:
           name: product-importer-db
-          property: connectionString
-      - key: RENDER_DATABASE_URL
+          property: host
+      - key: DB_PORT
         fromDatabase:
           name: product-importer-db
-          property: connectionString
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: product-importer-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: product-importer-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: product-importer-db
+          property: password
       - key: REDIS_URL
         fromService:
           name: product-importer-redis
