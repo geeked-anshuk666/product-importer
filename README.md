@@ -73,7 +73,12 @@ The application can be configured using environment variables:
 
 ## Running the Application
 
-1. **Start the Django development server**
+1. **Start all services at once** (recommended for development)
+   ```bash
+   start_all.bat
+   ```
+
+2. **Start the Django development server**
    
    With SQLite (default):
    ```bash
@@ -85,7 +90,7 @@ The application can be configured using environment variables:
    run_postgres.bat
    ```
 
-2. **Start the Celery worker** (in a separate terminal)
+3. **Start the Celery worker** (in a separate terminal)
    
    On Linux/Mac:
    ```bash
@@ -102,12 +107,18 @@ The application can be configured using environment variables:
    run_celery_postgres.bat
    ```
 
-3. **Start Redis** (if not already running)
+4. **Start Redis** (if not already running)
    ```bash
    redis-server
    ```
 
-4. **Access the application**
+5. **Health Check**
+   To verify all services are running properly:
+   ```bash
+   health_check.bat
+   ```
+
+6. **Access the application**
    Open your browser and navigate to `http://localhost:8000`
 
 ## Deployment
