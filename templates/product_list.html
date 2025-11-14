@@ -194,6 +194,12 @@
             }
         });
         
+        // Handle delete modal
+        $('#deleteModal').on('show.bs.modal', function(event) {
+            const button = $(event.relatedTarget);
+            currentProductId = button.data('product-id');
+        });
+        
         // Handle save product
         $('#saveProductBtn').on('click', function() {
             const sku = $('#productSku').val();
@@ -240,6 +246,7 @@
         // Handle delete product
         $('#confirmDeleteBtn').on('click', function() {
             if (currentProductId) {
+                const productIdToDelete = currentProductId; // Store for potential error handling
                 $.ajax({
                     url: `/api/products/${currentProductId}/`,
                     method: 'DELETE',
@@ -249,9 +256,25 @@
                         alert('Product deleted successfully!');
                     },
                     error: function(xhr) {
-                        alert('Error deleting product: ' + xhr.responseText);
+                        $('#deleteModal').modal('hide');
+                        if (xhr.status === 404) {
+                            alert('Product not found. It may have already been deleted.');
+                            // Remove the row from the table directly
+                            $(`button[data-product-id="${productIdToDelete}"]`).closest('tr').fadeOut(300, function() {
+                                $(this).remove();
+                                // Check if table is empty and show "No products found" message
+                                if ($('#productsTableBody tr').length === 0) {
+                                    loadProducts(); // Reload to show proper pagination
+                                }
+                            });
+                        } else {
+                            alert('Error deleting product: ' + xhr.responseText);
+                        }
                     }
                 });
+            } else {
+                alert('No product selected for deletion.');
+                $('#deleteModal').modal('hide');
             }
         });
         
@@ -277,11 +300,16 @@
         
         // Load products function
         function loadProducts(page = 1) {
+            // Ensure page is a valid number
+            const pageNumber = parseInt(page) || 1;
+            console.log('Loading products for page:', pageNumber);
+            
             const sku = $('#skuFilter').val();
             const name = $('#nameFilter').val();
             const is_active = $('#activeFilter').val();
             
-            let url = `/api/products/?page=${page}`;
+            let url = `/api/products/?page=${pageNumber}`;
+            console.log('API URL:', url);
             if (sku) url += `&sku=${encodeURIComponent(sku)}`;
             if (name) url += `&name=${encodeURIComponent(name)}`;
             if (is_active) url += `&is_active=${is_active}`;
@@ -323,8 +351,11 @@
                     tbody.append('<tr><td colspan="5" class="text-center">No products found</td></tr>');
                     $('#pagination').empty();
                 }
-            }).fail(function() {
-                alert('Error loading products');
+            }).fail(function(xhr, status, error) {
+                console.error('Error loading products:', error);
+                console.error('Status:', status);
+                console.error('Response:', xhr.responseText);
+                alert('Error loading products. Check console for details.');
             });
         }
         
@@ -333,16 +364,34 @@
             const pagination = $('#pagination');
             pagination.empty();
             
-            if (data.previous) {
+            // Extract page numbers from URLs
+            function getPageNumberFromUrl(url) {
+                if (!url) return null;
+                const match = url.match(/page=(\d+)/);
+                return match ? parseInt(match[1]) : null;
+            }
+            
+            // Calculate current page from next/previous URLs
+            const currentPage = data.previous ? (getPageNumberFromUrl(data.previous) + 1) : 1;
+            const nextPage = getPageNumberFromUrl(data.next);
+            const previousPage = getPageNumberFromUrl(data.previous);
+            const totalPages = Math.ceil(data.count / 20); // 20 is the page size
+            
+            // Add Previous button
+            if (previousPage) {
                 pagination.append(`
                     <li class="page-item">
-                        <a class="page-link" href="#" data-page="${data.previous_page_number}">Previous</a>
+                        <a class="page-link" href="#" data-page="${previousPage}">Previous</a>
                     </li>
                 `);
             }
             
-            for (let i = 1; i <= data.num_pages; i++) {
-                const activeClass = i === data.current_page ? 'active' : '';
+            // Add page numbers (show up to 10 pages around current page)
+            const startPage = Math.max(1, currentPage - 5);
+            const endPage = Math.min(totalPages, currentPage + 4);
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const activeClass = i === currentPage ? 'active' : '';
                 pagination.append(`
                     <li class="page-item ${activeClass}">
                         <a class="page-link" href="#" data-page="${i}">${i}</a>
@@ -350,10 +399,11 @@
                 `);
             }
             
-            if (data.next) {
+            // Add Next button
+            if (nextPage) {
                 pagination.append(`
                     <li class="page-item">
-                        <a class="page-link" href="#" data-page="${data.next_page_number}">Next</a>
+                        <a class="page-link" href="#" data-page="${nextPage}">Next</a>
                     </li>
                 `);
             }
@@ -362,7 +412,17 @@
             pagination.find('a').on('click', function(e) {
                 e.preventDefault();
                 const page = $(this).data('page');
-                loadProducts(page);
+                console.log('Pagination click - page data attribute:', page);
+                // Make sure page is a valid number
+                const pageNumber = parseInt(page);
+                console.log('Parsed page number:', pageNumber);
+                if (pageNumber && !isNaN(pageNumber) && pageNumber > 0) {
+                    console.log('Loading page:', pageNumber);
+                    loadProducts(pageNumber);
+                } else {
+                    console.error('Invalid page number:', page);
+                    alert('Invalid page number: ' + page);
+                }
             });
         }
     });
