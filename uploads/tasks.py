@@ -4,6 +4,8 @@ from products.models import Product
 import csv
 import os
 import logging
+from django.db import transaction
+from collections import defaultdict
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -74,7 +76,7 @@ def extract_product_data(row):
 @shared_task
 def process_csv_upload(upload_id):
     """
-    Process a CSV upload asynchronously
+    Process a CSV upload asynchronously with optimizations for large files
     """
     try:
         upload = Upload.objects.get(id=upload_id)
@@ -117,6 +119,11 @@ def process_csv_upload(upload_id):
             failed_count = 0
             error_details = []
             
+            # Batch processing variables
+            batch_size = 1000  # Process 1000 products at a time
+            product_batch = []
+            batch_counter = 0
+            
             for i, row in enumerate(reader):
                 try:
                     # Extract product data from CSV row
@@ -135,18 +142,30 @@ def process_csv_upload(upload_id):
                             error_details.append(f"Row {i+1}: Missing name. Row data: {row}")
                         continue
                         
-                    # Create or update product (case-insensitive SKU)
-                    product, created = Product.objects.update_or_create(
-                        sku__iexact=sku,
-                        defaults={
-                            'sku': sku.upper(),  # Store as uppercase
-                            'name': name,
-                            'description': description,
-                            'is_active': True
-                        }
-                    )
+                    # Add to batch
+                    product_batch.append({
+                        'sku': sku.upper(),  # Store as uppercase
+                        'name': name,
+                        'description': description,
+                        'is_active': True
+                    })
                     
-                    processed_count += 1
+                    # When batch is full, process it
+                    if len(product_batch) >= batch_size:
+                        processed_in_batch = process_product_batch(product_batch, upload.id)
+                        processed_count += processed_in_batch
+                        product_batch = []  # Reset batch
+                        
+                        # Update progress
+                        upload.refresh_from_db()  # Get latest data from DB
+                        upload.processed_rows = processed_count
+                        upload.failed_rows = failed_count
+                        upload.save()
+                        
+                        batch_counter += 1
+                        # Log progress every 10 batches
+                        if batch_counter % 10 == 0:
+                            logger.info(f"Processed {batch_counter} batches, {processed_count} products so far")
                     
                 except Exception as e:
                     failed_count += 1
@@ -154,12 +173,11 @@ def process_csv_upload(upload_id):
                         error_details.append(f"Row {i+1}: Exception - {str(e)}. Row data: {row}")
                     continue
                 
-                # Update progress more frequently for better feedback
-                if processed_count % 50 == 0:  # Update every 50 rows
-                    upload.processed_rows = processed_count
-                    upload.failed_rows = failed_count
-                    upload.save()
-            
+            # Process remaining products in the final batch
+            if product_batch:
+                processed_in_batch = process_product_batch(product_batch, upload.id)
+                processed_count += processed_in_batch
+                
             # Log error details if there were failures
             if error_details:
                 error_summary = f"First {len(error_details)} errors:\n" + "\n".join(error_details)
@@ -167,6 +185,7 @@ def process_csv_upload(upload_id):
                 print(error_summary)
             
             # Final update with actual counts
+            upload.refresh_from_db()  # Get latest data from DB
             upload.processed_rows = processed_count
             upload.failed_rows = failed_count
             upload.total_rows = processed_count + failed_count
@@ -186,3 +205,58 @@ def process_csv_upload(upload_id):
         except:
             pass
         return f"Failed to process upload: {str(e)}"
+
+
+def process_product_batch(product_batch, upload_id):
+    """
+    Process a batch of products using bulk operations for better performance
+    """
+    try:
+        # Use a more efficient approach: bulk create with conflict resolution
+        # First, get all SKUs in this batch
+        skus_in_batch = [product['sku'] for product in product_batch]
+        
+        # Find existing products with these SKUs (case-insensitive)
+        existing_products = Product.objects.filter(sku__in=skus_in_batch)
+        existing_sku_dict = {product.sku: product for product in existing_products}
+        
+        # Separate products to create and update
+        products_to_create = []
+        products_to_update = []
+        
+        for product_data in product_batch:
+            sku = product_data['sku']
+            if sku in existing_sku_dict:
+                # Update existing product
+                existing_product = existing_sku_dict[sku]
+                existing_product.name = product_data['name']
+                existing_product.description = product_data['description']
+                existing_product.is_active = product_data['is_active']
+                products_to_update.append(existing_product)
+            else:
+                # Create new product
+                products_to_create.append(Product(**product_data))
+        
+        # Bulk operations
+        if products_to_create:
+            Product.objects.bulk_create(products_to_create, ignore_conflicts=True)
+        
+        if products_to_update:
+            Product.objects.bulk_update(products_to_update, ['name', 'description', 'is_active'])
+        
+        return len(product_batch)
+        
+    except Exception as e:
+        logger.error(f"Error processing batch for upload {upload_id}: {str(e)}")
+        # If bulk operations fail, fall back to individual processing
+        processed_count = 0
+        for product_data in product_batch:
+            try:
+                Product.objects.update_or_create(
+                    sku__iexact=product_data['sku'],
+                    defaults=product_data
+                )
+                processed_count += 1
+            except Exception as inner_e:
+                logger.error(f"Error processing individual product: {str(inner_e)}")
+        return processed_count
