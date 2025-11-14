@@ -309,7 +309,7 @@
         
         $('#confirmBulkDeleteBtn').on('click', function() {
             $.ajax({
-                url: '/api/products/bulk_delete/',
+                url: '/api/products/bulk-delete/',  // Fixed: changed underscore to hyphen
                 method: 'DELETE',
                 success: function() {
                     $('#bulkDeleteModal').modal('hide');
