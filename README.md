@@ -47,13 +47,13 @@ A web application for importing large CSV files of products into a database with
 
 4. **Set up the database**
    
-   For development (SQLite):
+   For development with SQLite (default):
    ```bash
    python manage.py migrate
    ```
    
-   For production (PostgreSQL):
-   - Create a PostgreSQL database
+   For development with PostgreSQL:
+   - Install PostgreSQL and create a database named `product_importer_db`
    - Set the DATABASE_URL environment variable
    - Run migrations
 
@@ -74,8 +74,15 @@ The application can be configured using environment variables:
 ## Running the Application
 
 1. **Start the Django development server**
+   
+   With SQLite (default):
    ```bash
    python manage.py runserver
+   ```
+   
+   With PostgreSQL (Windows):
+   ```bash
+   run_postgres.bat
    ```
 
 2. **Start the Celery worker** (in a separate terminal)
@@ -85,9 +92,14 @@ The application can be configured using environment variables:
    celery -A product_importer.celery worker --loglevel=info
    ```
    
-   On Windows:
+   On Windows with SQLite:
    ```bash
    python celery_worker_windows.py worker --loglevel=info
+   ```
+   
+   On Windows with PostgreSQL:
+   ```bash
+   run_celery_postgres.bat
    ```
 
 3. **Start Redis** (if not already running)
