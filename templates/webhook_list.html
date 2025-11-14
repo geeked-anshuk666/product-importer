@@ -192,6 +192,12 @@
             });
         });
         
+        // Handle delete webhook modal
+        $('#deleteWebhookModal').on('show.bs.modal', function(event) {
+            const button = $(event.relatedTarget);
+            currentWebhookId = button.data('webhook-id');
+        });
+        
         // Handle delete webhook
         $('#confirmDeleteWebhookBtn').on('click', function() {
             if (currentWebhookId) {
@@ -207,6 +213,8 @@
                         alert('Error deleting webhook: ' + xhr.responseText);
                     }
                 });
+            } else {
+                alert('No webhook selected for deletion.');
             }
         });
         
@@ -254,41 +262,52 @@
                 const tbody = $('#webhooksTableBody');
                 tbody.empty();
                 
-                if (data.length > 0) {
-                    data.forEach(function(webhook) {
-                        const status = webhook.is_active ? 'Active' : 'Inactive';
-                        const statusClass = webhook.is_active ? 'text-success' : 'text-danger';
-                        const eventType = webhook.event_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
-                        
-                        const row = `
-                            <tr>
-                                <td>${webhook.url}</td>
-                                <td>${eventType}</td>
-                                <td><span class="${statusClass}">${status}</span></td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline-primary" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#webhookModal" 
-                                            data-mode="edit" 
-                                            data-webhook-id="${webhook.id}">Edit</button>
-                                    <button class="btn btn-sm btn-outline-info" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#testWebhookModal" 
-                                            data-webhook-id="${webhook.id}">Test</button>
-                                    <button class="btn btn-sm btn-outline-danger" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#deleteWebhookModal" 
-                                            data-webhook-id="${webhook.id}">Delete</button>
-                                </td>
-                            </tr>
-                        `;
-                        tbody.append(row);
-                    });
-                } else {
-                    tbody.append('<tr><td colspan="4" class="text-center">No webhooks found</td></tr>');
+                try {
+                    // Handle both paginated and non-paginated responses
+                    const webhooks = data.results || data;
+                    
+                    if (webhooks.length > 0) {
+                        webhooks.forEach(function(webhook) {
+                            const status = webhook.is_active ? 'Active' : 'Inactive';
+                            const statusClass = webhook.is_active ? 'text-success' : 'text-danger';
+                            const eventType = webhook.event_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                            
+                            const row = `
+                                <tr>
+                                    <td>${webhook.url}</td>
+                                    <td>${eventType}</td>
+                                    <td><span class="${statusClass}">${status}</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#webhookModal" 
+                                                data-mode="edit" 
+                                                data-webhook-id="${webhook.id}">Edit</button>
+                                        <button class="btn btn-sm btn-outline-info" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#testWebhookModal" 
+                                                data-webhook-id="${webhook.id}">Test</button>
+                                        <button class="btn btn-sm btn-outline-danger" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#deleteWebhookModal" 
+                                                data-webhook-id="${webhook.id}">Delete</button>
+                                    </td>
+                                </tr>
+                            `;
+                            tbody.append(row);
+                        });
+                    } else {
+                        tbody.append('<tr><td colspan="4" class="text-center">No webhooks found</td></tr>');
+                    }
+                } catch (error) {
+                    console.error('Error processing webhooks data:', error);
+                    tbody.append('<tr><td colspan="4" class="text-center text-danger">Error loading webhooks</td></tr>');
                 }
-            }).fail(function() {
-                alert('Error loading webhooks');
+            }).fail(function(xhr, status, error) {
+                console.error('Error loading webhooks:', status, error);
+                const tbody = $('#webhooksTableBody');
+                tbody.empty();
+                tbody.append('<tr><td colspan="4" class="text-center text-danger">Error loading webhooks: ' + error + '</td></tr>');
             });
         }
     });
