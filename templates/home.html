@@ -1,89 +1,79 @@
 {% extends 'base.html' %}
 
-{% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <h2>Product Importer</h2>
-            </div>
-            <div class="card-body">
-                <p class="lead">Welcome to the Product Importer application. This tool allows you to:</p>
-                <ul>
-                    <li>Upload large CSV files with product data</li>
-                    <li>Manage products through a web interface</li>
-                    <li>Configure and test webhooks for event notifications</li>
-                    <li>Bulk delete all products when needed</li>
-                </ul>
-                <p>Get started by navigating to the Products or Webhooks sections using the menu above.</p>
-            </div>
-        </div>
-    </div>
-</div>
+{% load static %}
+{% load tz %}
 
-<div class="row">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h3>Upload CSV File</h3>
-            </div>
-            <div class="card-body">
-                <form id="uploadForm" enctype="multipart/form-data">
-                    <div class="mb-3">
-                        <label for="csvFile" class="form-label">Select CSV File</label>
-                        <input class="form-control" type="file" id="csvFile" accept=".csv" required>
+{% block title %}Product Importer{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Upload CSV File</h3>
+                </div>
+                <div class="card-body">
+                    <form id="uploadForm" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="csvFile" class="form-label">Select CSV File</label>
+                            <input type="file" class="form-control" id="csvFile" accept=".csv" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Upload and Process</button>
+                    </form>
+                    
+                    <div id="uploadProgress" class="mt-4" style="display: none;">
+                        <h5>Upload Progress</h5>
+                        <div class="progress">
+                            <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <p id="progressText" class="mt-2"></p>
                     </div>
-                    <button type="submit" class="btn btn-primary">Upload</button>
-                </form>
-                <div id="uploadProgress" class="mt-3" style="display: none;">
-                    <div class="progress">
-                        <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
-                    </div>
-                    <div id="progressText" class="mt-2">Uploading...</div>
                 </div>
             </div>
         </div>
-    </div>
-    
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h3>Recent Uploads</h3>
-            </div>
-            <div class="card-body">
-                <div id="uploadsList">
-                    {% if recent_uploads %}
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>File</th>
-                                        <th>Status</th>
-                                        <th>Progress</th>
-                                        <th>Created</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for upload in recent_uploads %}
-                                    <tr>
-                                        <td>{{ upload.id }}</td>
-                                        <td>{{ upload.file.name|truncatechars:30 }}</td>
-                                        <td>
-                                            <span class="badge bg-{% if upload.status == 'completed' %}success{% elif upload.status == 'failed' %}danger{% elif upload.status == 'processing' %}warning{% else %}secondary{% endif %}">
-                                                {{ upload.get_status_display }}
-                                            </span>
-                                        </td>
-                                        <td>{{ upload.progress_percentage }}%</td>
-                                        <td>{{ upload.created_at|date:"M d, Y H:i" }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <p>No recent uploads found.</p>
-                    {% endif %}
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Recent Uploads</h3>
+                </div>
+                <div class="card-body">
+                    <div id="uploadsList">
+                        {% if recent_uploads %}
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>File</th>
+                                            <th>Status</th>
+                                            <th>Progress</th>
+                                            <th>Created</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for upload in recent_uploads %}
+                                        <tr>
+                                            <td>{{ upload.id }}</td>
+                                            <td>{{ upload.file.name|truncatechars:30 }}</td>
+                                            <td>
+                                                <span class="badge bg-{% if upload.status == 'completed' %}success{% elif upload.status == 'failed' %}danger{% elif upload.status == 'processing' %}warning{% else %}secondary{% endif %}">
+                                                    {{ upload.get_status_display }}
+                                                </span>
+                                            </td>
+                                            <td>{{ upload.progress_percentage }}%</td>
+                                            <td>{{ upload.created_at|localtime|date:"M d, Y H:i" }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p>No recent uploads found.</p>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
