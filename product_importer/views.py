@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.http import JsonResponse
 from uploads.models import Upload
 
 
@@ -14,3 +15,10 @@ def product_list(request):
 
 def webhook_list(request):
     return render(request, 'webhook_list.html')
+
+
+def health_check(request):
+    """
+    Health check endpoint for Render and other monitoring services
+    """
+    return JsonResponse({'status': 'healthy', 'message': 'Application is running'})

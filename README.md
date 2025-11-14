@@ -149,9 +149,25 @@ The application can be configured using environment variables:
 
 ## Deployment
 
-### Render Deployment
+### Docker Deployment on Render (Recommended)
 
-The application is configured for deployment on Render:
+The application includes Docker configuration that works with Render:
+
+1. Fork this repository to your GitHub account
+2. Create a new Web Service on Render
+3. Connect it to your forked repository
+4. Select "Docker" as the environment
+5. Render will automatically detect the render.yaml file and configure:
+   - A web service using the Dockerfile
+   - A worker service using Dockerfile.worker
+   - A PostgreSQL database
+   - A Redis instance
+6. **Important**: After deployment, if you encounter "DisallowedHost" errors, add your Render domain to the ALLOWED_HOSTS in `product_importer/settings.py`
+7. Click "Create" and Render will deploy the application
+
+### Render Deployment (Legacy Method)
+
+The application is also configured for deployment on Render using the traditional Python environment:
 
 1. Fork this repository to your GitHub account
 2. Create a new Web Service on Render
@@ -196,6 +212,9 @@ The application is configured for deployment on Render:
 - `PUT /api/webhooks/{id}/` - Update a specific webhook
 - `DELETE /api/webhooks/{id}/` - Delete a specific webhook
 - `POST /api/webhooks/{id}/test/` - Test a webhook
+
+### Health Check
+- `GET /health/` - Application health status
 
 ## CSV File Format
 

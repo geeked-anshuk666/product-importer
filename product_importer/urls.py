@@ -23,6 +23,7 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('products/', views.product_list, name='product-list'),
     path('webhooks/', views.webhook_list, name='webhook-list'),
+    path('health/', views.health_check, name='health-check'),
     path('api/', include('products.urls')),
     path('api/', include('webhooks.urls')),
     path('api/', include('uploads.urls')),

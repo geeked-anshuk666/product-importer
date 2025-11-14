@@ -1,9 +1,10 @@
 services:
   - type: web
     name: product-importer
-    env: python
-    buildCommand: "pip install -r requirements.txt && python manage.py migrate"
-    startCommand: "gunicorn product_importer.wsgi:application"
+    env: docker
+    dockerfilePath: Dockerfile
+    dockerContext: .
+    healthCheckPath: /
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -20,9 +21,9 @@ services:
 
   - type: worker
     name: product-importer-worker
-    env: python
-    buildCommand: "pip install -r requirements.txt && python manage.py migrate"
-    startCommand: "celery -A product_importer.celery worker --loglevel=info"
+    env: docker
+    dockerfilePath: Dockerfile.worker
+    dockerContext: .
     envVars:
       - key: DATABASE_URL
         fromDatabase:
