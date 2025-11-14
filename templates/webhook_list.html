@@ -253,15 +253,17 @@
                     $('#testResult').html(`
                         <div class="alert alert-success">
                             <h6>Test Result:</h6>
-                            <p><strong>Status:</strong> ${data.status}</p>
-                            <p><strong>Response:</strong> ${data.response}</p>
+                            <p><strong>Message:</strong> ${data.message}</p>
+                            <p><strong>Status Code:</strong> ${data.status_code || 'N/A'}</p>
+                            <p><strong>Response Time:</strong> ${data.response_time ? data.response_time + ' seconds' : 'N/A'}</p>
                         </div>
                     `);
                 }).fail(function(xhr) {
+                    const errorData = xhr.responseJSON || { error: 'Unknown error occurred' };
                     $('#testResult').html(`
                         <div class="alert alert-danger">
                             <h6>Test Failed:</h6>
-                            <p>${xhr.responseText}</p>
+                            <p><strong>Error:</strong> ${errorData.error || errorData.message || xhr.responseText}</p>
                         </div>
                     `);
                 });
