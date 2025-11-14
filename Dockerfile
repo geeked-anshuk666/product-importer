@@ -29,7 +29,7 @@ COPY . /app/
 RUN mkdir -p /app/static
 
 # Collect static files
-RUN python manage.py collectstatic --noinput
+RUN python manage.py collectstatic --noinput || true
 
 # Expose port
 EXPOSE 8000
@@ -39,5 +39,5 @@ RUN adduser --disabled-password --gecos '' appuser
 RUN chown -R appuser:appuser /app
 USER appuser
 
-# Run migrations and start the application
-CMD ["sh", "-c", "python manage.py migrate --noinput && gunicorn product_importer.wsgi:application --bind 0.0.0.0:8000"]
+# Run wait script, migrations, and start the application
+CMD ["sh", "-c", "python wait-for-db.py && python manage.py migrate --noinput && gunicorn product_importer.wsgi:application --bind 0.0.0.0:8000"]
