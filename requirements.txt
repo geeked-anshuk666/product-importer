@@ -5,3 +5,4 @@ celery==5.3.4
 redis==5.0.1
 dj-database-url==3.0.1
 requests==2.32.5
+gunicorn==21.2.0
