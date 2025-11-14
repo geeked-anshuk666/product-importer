@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h2>Product Importer</h2>
+            </div>
+            <div class="card-body">
+                <p class="lead">Welcome to the Product Importer application. This tool allows you to:</p>
+                <ul>
+                    <li>Upload large CSV files with product data</li>
+                    <li>Manage products through a web interface</li>
+                    <li>Configure and test webhooks for event notifications</li>
+                    <li>Bulk delete all products when needed</li>
+                </ul>
+                <p>Get started by navigating to the Products or Webhooks sections using the menu above.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3>Upload CSV File</h3>
+            </div>
+            <div class="card-body">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="csvFile" class="form-label">Select CSV File</label>
+                        <input class="form-control" type="file" id="csvFile" accept=".csv" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </form>
+                <div id="uploadProgress" class="mt-3" style="display: none;">
+                    <div class="progress">
+                        <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <div id="progressText" class="mt-2">Uploading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3>Recent Uploads</h3>
+            </div>
+            <div class="card-body">
+                <div id="uploadsList">
+                    <p>No recent uploads found.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Handle file upload
+        $('#uploadForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const fileInput = $('#csvFile')[0];
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select a file to upload.');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            // Show progress
+            $('#uploadProgress').show();
+            $('#progressBar').css('width', '0%');
+            $('#progressText').text('Starting upload...');
+            
+            // Send upload request
+            $.ajax({
+                url: '/api/uploads/',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(data) {
+                    // Start polling for progress
+                    pollUploadProgress(data.id);
+                },
+                error: function(xhr) {
+                    $('#uploadProgress').hide();
+                    alert('Upload failed: ' + xhr.responseText);
+                }
+            });
+        });
+        
+        // Poll for upload progress
+        function pollUploadProgress(uploadId) {
+            $.get(`/api/uploads/${uploadId}/`, function(data) {
+                const progress = data.progress_percentage || 0;
+                $('#progressBar').css('width', progress + '%');
+                $('#progressText').text(`Processing: ${progress}% (${data.processed_rows}/${data.total_rows})`);
+                
+                if (data.status === 'completed') {
+                    $('#progressText').text('Upload completed successfully!');
+                } else if (data.status === 'failed') {
+                    $('#progressText').text('Upload failed!');
+                } else {
+                    // Continue polling
+                    setTimeout(() => pollUploadProgress(uploadId), 1000);
+                }
+            }).fail(function() {
+                $('#progressText').text('Error checking progress');
+            });
+        }
+        
+        // Load recent uploads
+        function loadRecentUploads() {
+            // This would fetch recent uploads from the API
+            // For now, we'll just show a placeholder
+        }
+        
+        // Load recent uploads on page load
+        loadRecentUploads();
+    });
+</script>
+{% endblock %}
