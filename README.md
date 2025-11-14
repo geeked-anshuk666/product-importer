@@ -18,6 +18,7 @@ A web application for importing large CSV files of products into a database with
 - **Task Queue**: Celery with Redis
 - **Frontend**: HTML, Bootstrap 5, jQuery
 - **Deployment**: Render-ready with render.yaml
+- **Containerization**: Docker and Docker Compose
 
 ## Prerequisites
 
@@ -25,6 +26,7 @@ A web application for importing large CSV files of products into a database with
 - PostgreSQL (for production)
 - Redis (for Celery)
 - pip (Python package manager)
+- Docker and Docker Compose (for containerized deployment)
 
 ## Installation
 
@@ -57,9 +59,33 @@ A web application for importing large CSV files of products into a database with
    - Set the DATABASE_URL environment variable
    - Run migrations
 
-5. **Create a superuser (optional)**
+## Docker Deployment (Recommended)
+
+The application includes Docker configuration for easy deployment:
+
+1. **Build and start all services**
    ```bash
-   python manage.py createsuperuser
+   docker-compose up --build
+   ```
+
+2. **Access the application**
+   Open your browser and navigate to `http://localhost:8000`
+
+3. **Run commands in containers (if needed)**
+   ```bash
+   # Run migrations
+   docker-compose exec web python manage.py migrate
+   
+   # Create a superuser
+   docker-compose exec web python manage.py createsuperuser
+   
+   # Collect static files
+   docker-compose exec web python manage.py collectstatic --noinput
+   ```
+
+4. **Stop services**
+   ```bash
+   docker-compose down
    ```
 
 ## Configuration

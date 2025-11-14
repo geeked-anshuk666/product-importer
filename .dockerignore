@@ -1,0 +1,16 @@
+venv/
+env/
+.git/
+.gitignore
+README.md
+*.md
+*.log
+*.txt
+*.pyc
+__pycache__/
+*.sqlite3
+.DS_Store
+Thumbs.db
+.env
+.env.local
+.env.*.local
