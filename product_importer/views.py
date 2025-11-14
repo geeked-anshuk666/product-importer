@@ -1,8 +1,11 @@
 from django.shortcuts import render
+from uploads.models import Upload
 
 
 def home(request):
-    return render(request, 'home.html')
+    # Get recent uploads for display
+    recent_uploads = Upload.objects.all().order_by('-created_at')[:10]
+    return render(request, 'home.html', {'recent_uploads': recent_uploads})
 
 
 def product_list(request):
