@@ -17,7 +17,7 @@ A web application for importing large CSV files of products into a database with
 - **Database**: PostgreSQL (production), SQLite (development)
 - **Task Queue**: Celery with Redis
 - **Frontend**: HTML, Bootstrap 5, jQuery
-- **Deployment**: Heroku-ready with Procfile
+- **Deployment**: Render-ready with render.yaml
 
 ## Prerequisites
 
@@ -93,15 +93,29 @@ The application can be configured using environment variables:
 
 ## Deployment
 
-The application is configured for deployment on Heroku:
+### Render Deployment
 
-1. Create a new Heroku app
-2. Add the Heroku Postgres and Heroku Redis add-ons
-3. Set the required environment variables
-4. Deploy using Git:
-   ```bash
-   git push heroku main
-   ```
+The application is configured for deployment on Render:
+
+1. Fork this repository to your GitHub account
+2. Create a new Web Service on Render
+3. Connect it to your forked repository
+4. Render will automatically detect the render.yaml file and configure:
+   - A web service for the Django application
+   - A worker service for Celery tasks
+   - A PostgreSQL database
+   - A Redis instance
+5. Click "Create" and Render will deploy the application
+
+### Manual Deployment
+
+1. Create a new Web Service on Render
+2. Set the build command: `pip install -r requirements.txt`
+3. Set the start command: `gunicorn product_importer.wsgi:application`
+4. Add environment variables as needed
+5. Create a separate Background Worker service with:
+   - Build command: `pip install -r requirements.txt`
+   - Start command: `celery -A product_importer.celery worker --loglevel=info`
 
 ## API Endpoints
 
