@@ -101,19 +101,28 @@ if DATABASE_URL:
     # Print the database URL for debugging (remove in production)
     print(f"Using DATABASE_URL: {DATABASE_URL}")
 else:
-    # Use PostgreSQL as the default database
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('DB_NAME', 'product_importer_db'),
-            'USER': os.environ.get('DB_USER', 'postgres'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', 'postgres'),
-            'HOST': os.environ.get('DB_HOST', 'localhost'),
-            'PORT': os.environ.get('DB_PORT', '5432'),
+    # Check for Render-specific database environment variables
+    RENDER_DATABASE_URL = os.environ.get('RENDER_DATABASE_URL')
+    if RENDER_DATABASE_URL:
+        import dj_database_url
+        DATABASES = {
+            'default': dj_database_url.parse(RENDER_DATABASE_URL)
         }
-    }
-    # Print the database config for debugging (remove in production)
-    print(f"Using database config: {DATABASES['default']}")
+        print(f"Using RENDER_DATABASE_URL: {RENDER_DATABASE_URL}")
+    else:
+        # Use PostgreSQL as the default database
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': os.environ.get('DB_NAME', 'product_importer_db'),
+                'USER': os.environ.get('DB_USER', 'postgres'),
+                'PASSWORD': os.environ.get('DB_PASSWORD', 'postgres'),
+                'HOST': os.environ.get('DB_HOST', 'localhost'),
+                'PORT': os.environ.get('DB_PORT', '5432'),
+            }
+        }
+        # Print the database config for debugging (remove in production)
+        print(f"Using database config: {DATABASES['default']}")
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
