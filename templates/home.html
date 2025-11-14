@@ -52,7 +52,38 @@
             </div>
             <div class="card-body">
                 <div id="uploadsList">
-                    <p>No recent uploads found.</p>
+                    {% if recent_uploads %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>File</th>
+                                        <th>Status</th>
+                                        <th>Progress</th>
+                                        <th>Created</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for upload in recent_uploads %}
+                                    <tr>
+                                        <td>{{ upload.id }}</td>
+                                        <td>{{ upload.file.name|truncatechars:30 }}</td>
+                                        <td>
+                                            <span class="badge bg-{% if upload.status == 'completed' %}success{% elif upload.status == 'failed' %}danger{% elif upload.status == 'processing' %}warning{% else %}secondary{% endif %}">
+                                                {{ upload.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ upload.progress_percentage }}%</td>
+                                        <td>{{ upload.created_at|date:"M d, Y H:i" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p>No recent uploads found.</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -113,6 +144,10 @@
                 if (data.status === 'completed') {
                     $('#progressBar').css('width', '100%');
                     $('#progressText').text('Upload completed successfully!');
+                    // Refresh the page to show updated uploads list
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
                 } else if (data.status === 'failed') {
                     $('#progressBar').css('width', '100%');
                     $('#progressText').text('Upload failed!');
@@ -140,14 +175,8 @@
             });
         }
         
-        // Load recent uploads
-        function loadRecentUploads() {
-            // This would fetch recent uploads from the API
-            // For now, we'll just show a placeholder
-        }
-        
         // Load recent uploads on page load
-        loadRecentUploads();
+        // This is now handled by the server-side rendering
     });
 </script>
 {% endblock %}
