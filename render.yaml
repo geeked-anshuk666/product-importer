@@ -5,6 +5,7 @@ services:
     dockerfilePath: Dockerfile
     dockerContext: .
     healthCheckPath: /
+    startCommand: "python wait-for-db.py && python manage.py migrate --noinput && gunicorn product_importer.wsgi:application --bind 0.0.0.0:8000"
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -24,6 +25,7 @@ services:
     env: docker
     dockerfilePath: Dockerfile.worker
     dockerContext: .
+    startCommand: "python wait-for-db.py && celery -A product_importer worker --loglevel=info"
     envVars:
       - key: DATABASE_URL
         fromDatabase:

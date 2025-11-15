@@ -7,17 +7,18 @@ from urllib.parse import urlparse
 
 def wait_for_db():
     """Wait for database to be available"""
-    # Wait a bit for environment variables to be set
-    time.sleep(2)
-    
+    max_wait_time = 60  # Maximum wait time in seconds
+    wait_interval = 5   # Interval between checks in seconds
+    elapsed_time = 0
+
     database_url = os.environ.get('DATABASE_URL')
-    
-    if not database_url:
-        print("Warning: DATABASE_URL not set, waiting a bit more...")
-        # Wait a bit more and try again
-        time.sleep(5)
+
+    while not database_url and elapsed_time < max_wait_time:
+        print("Warning: DATABASE_URL not set, waiting...")
+        time.sleep(wait_interval)
+        elapsed_time += wait_interval
         database_url = os.environ.get('DATABASE_URL')
-        
+
     if not database_url:
         print("Error: DATABASE_URL still not set after waiting")
         print("Available environment variables:")
