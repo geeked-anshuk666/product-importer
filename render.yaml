@@ -5,7 +5,7 @@ services:
     dockerfilePath: Dockerfile
     dockerContext: .
     healthCheckPath: /health/
-    startCommand: "python wait-for-db.py && python manage.py migrate --noinput && gunicorn product_importer.wsgi:application --bind 0.0.0.0:8000"
+    # The 'startCommand' has been REMOVED (as required by 'env: docker')
     envVars:
       - key: DB_HOST
         fromDatabase:
@@ -35,6 +35,7 @@ services:
         fromService:
           name: product-importer-redis
           property: connectionString
+          type: keyvalue  # <-- ADDED this required type
       - key: SECRET_KEY
         generateValue: true
       - key: DEBUG
@@ -45,7 +46,7 @@ services:
     env: docker
     dockerfilePath: Dockerfile.worker
     dockerContext: .
-    startCommand: "python wait-for-db.py && celery -A product_importer.celery worker --loglevel=info"
+    # The 'startCommand' has been REMOVED (as required by 'env: docker')
     envVars:
       - key: DB_HOST
         fromDatabase:
@@ -75,16 +76,22 @@ services:
         fromService:
           name: product-importer-redis
           property: connectionString
+          type: keyvalue  # <-- ADDED this required type
       - key: SECRET_KEY
         generateValue: true
       - key: DEBUG
         value: "False"
-
-  # ✅ Proper Redis declaration
+  
+  # This is the new Redis service block (replaces the root 'redis:')
   - type: keyvalue
     name: product-importer-redis
+    plan: free
+    ipAllowList: [] # <-- ADDED this required setting
 
+# The root 'databases:' block stays the same
 databases:
   - name: product-importer-db
     databaseName: product_importer_db
     user: product_importer_user
+
+# The root 'redis:' block is GONE (as it's now a service)
