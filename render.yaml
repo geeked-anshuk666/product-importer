@@ -81,6 +81,7 @@ services:
         generateValue: true
       - key: DEBUG
         value: "False"
+
 databases:
   - name: product-importer-db
     databaseName: product_importer_db
@@ -88,4 +89,3 @@ databases:
 
 redis:
   - name: product-importer-redis
-    user: product_importer_user
