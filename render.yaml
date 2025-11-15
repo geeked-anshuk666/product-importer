@@ -89,6 +89,3 @@ databases:
 redis:
   - name: product-importer-redis
     user: product_importer_user
-
-redis:
-  - name: product-importer-redis
