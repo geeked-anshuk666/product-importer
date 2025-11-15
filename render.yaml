@@ -6,49 +6,6 @@ services:
     dockerfilePath: Dockerfile
     dockerContext: .
     healthCheckPath: /health/
-    # NOTE: startCommand removed for docker runtime — define CMD in Dockerfile
-    envVars:
-      - key: DB_HOST
-        fromDatabase:
-          name: product-importer-db
-          property: host
-      - key: DB_PORT
-        fromDatabase:
-          name: product-importer-db
-          property: port
-      - key: DB_NAME
-        fromDatabase:
-          name: product-importer-db
-          property: database
-      - key: DB_USER
-        fromDatabase:
-          name: product-importer-db
-          property: user
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: product-importer-db
-          property: password
-      - key: DATABASE_URL
-        fromDatabase:
-          name: product-importer-db
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          name: product-importer-redis
-          type: keyvalue
-          property: connectionString
-      - key: SECRET_KEY
-        generateValue: true
-      - key: DEBUG
-        value: "False"
-
-  - type: worker
-    name: product-importer-worker
-    env: docker
-    plan: free
-    dockerfilePath: Dockerfile.worker
-    dockerContext: .
-    # startCommand removed for docker runtime — define CMD in Dockerfile.worker
     envVars:
       - key: DB_HOST
         fromDatabase:
@@ -87,7 +44,7 @@ services:
   - type: keyvalue
     name: product-importer-redis
     plan: free
-    ipAllowList: []    # explicit empty list required by the spec for this service type
+    ipAllowList: []
 
 databases:
   - name: product-importer-db
