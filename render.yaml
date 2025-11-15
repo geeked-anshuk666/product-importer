@@ -6,13 +6,7 @@ services:
     dockerfilePath: Dockerfile
     dockerContext: .
     healthCheckPath: /health/
-    # Start: migrations, run celery in background, then gunicorn
-    startCommand: >
-      python wait-for-db.py &&
-      python manage.py migrate --noinput &&
-      # start celery in background (hobby use only)
-      celery -A product_importer.celery worker --loglevel=info --concurrency=1 & 
-      exec gunicorn product_importer.wsgi:application --bind 0.0.0.0:8000
+    # NOTE: startCommand removed because docker runtime in this blueprint must not include startCommand.
     envVars:
       - key: DB_HOST
         fromDatabase:
@@ -41,13 +35,57 @@ services:
       - key: REDIS_URL
         fromService:
           name: product-importer-redis
+          type: keyvalue
           property: connectionString
       - key: SECRET_KEY
         generateValue: true
       - key: DEBUG
         value: "False"
 
-  # Redis / KeyValue as a service on free plan
+  - type: worker
+    name: product-importer-worker
+    env: docker
+    plan: free
+    dockerfilePath: Dockerfile.worker
+    dockerContext: .
+    # keep startCommand for worker (worker services often need an explicit start command)
+    startCommand: "python wait-for-db.py && celery -A product_importer.celery worker --loglevel=info"
+    ipAllowList: []    # required (explicit empty list means no IP restrictions)
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: product-importer-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: product-importer-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: product-importer-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: product-importer-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: product-importer-db
+          property: password
+      - key: DATABASE_URL
+        fromDatabase:
+          name: product-importer-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: product-importer-redis
+          type: keyvalue
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+
   - type: keyvalue
     name: product-importer-redis
     plan: free
