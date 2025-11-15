@@ -6,7 +6,7 @@ services:
     dockerfilePath: Dockerfile
     dockerContext: .
     healthCheckPath: /health/
-    # NOTE: startCommand removed because docker runtime in this blueprint must not include startCommand.
+    # NOTE: startCommand removed for docker runtime — define CMD in Dockerfile
     envVars:
       - key: DB_HOST
         fromDatabase:
@@ -48,9 +48,7 @@ services:
     plan: free
     dockerfilePath: Dockerfile.worker
     dockerContext: .
-    # keep startCommand for worker (worker services often need an explicit start command)
-    startCommand: "python wait-for-db.py && celery -A product_importer.celery worker --loglevel=info"
-    ipAllowList: []    # required (explicit empty list means no IP restrictions)
+    # startCommand removed for docker runtime — define CMD in Dockerfile.worker
     envVars:
       - key: DB_HOST
         fromDatabase:
@@ -89,6 +87,7 @@ services:
   - type: keyvalue
     name: product-importer-redis
     plan: free
+    ipAllowList: []    # explicit empty list required by the spec for this service type
 
 databases:
   - name: product-importer-db
