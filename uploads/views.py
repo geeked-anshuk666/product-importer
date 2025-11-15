@@ -51,3 +51,14 @@ def upload_stats(request):
         'processing': processing,
         'failed': failed
     })
+
+
+@api_view(['GET'])
+def recent_uploads(request):
+    """
+    Get recent uploads with progress information
+    """
+    # Get the 10 most recent uploads
+    recent = Upload.objects.all().order_by('-created_at')[:10]
+    serializer = UploadSerializer(recent, many=True)
+    return Response(serializer.data)

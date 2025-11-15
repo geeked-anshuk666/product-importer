@@ -145,6 +145,9 @@
         // Load stats on page load
         loadStats();
         
+        // Start polling for recent uploads progress
+        pollRecentUploadsProgress();
+        
         // Handle file upload
         $('#uploadForm').on('submit', function(e) {
             e.preventDefault();
@@ -224,6 +227,49 @@
             }).fail(function() {
                 $('#progressText').text('Error checking progress');
             });
+        }
+        
+        // Poll for recent uploads progress
+        function pollRecentUploadsProgress() {
+            $.get('/api/uploads/recent/', function(data) {
+                // Update each upload progress in the recent uploads table
+                data.forEach(function(upload) {
+                    const row = $(`#uploadsList table tbody tr:has(td:first:contains('${upload.id}'))`);
+                    if (row.length > 0) {
+                        // Update status badge
+                        const statusBadge = row.find('td:eq(2) .badge');
+                        statusBadge.removeClass('bg-secondary bg-success bg-warning bg-danger')
+                                  .addClass(`bg-${getStatusClass(upload.status)}`)
+                                  .text(upload.get_status_display);
+                        
+                        // Update progress bar
+                        const progressBar = row.find('td:eq(3) .progress-bar');
+                        const progressText = row.find('td:eq(3) small');
+                        progressBar.css('width', `${upload.progress_percentage}%`);
+                        progressText.text(`${upload.progress_percentage}%`);
+                        
+                        // Update rows count
+                        const rowsCell = row.find('td:eq(4)');
+                        rowsCell.html(`<small>${upload.processed_rows}/${upload.total_rows}</small>`);
+                    }
+                });
+                
+                // Continue polling
+                setTimeout(pollRecentUploadsProgress, 3000); // Poll every 3 seconds
+            }).fail(function() {
+                // Continue polling even if this request fails
+                setTimeout(pollRecentUploadsProgress, 5000); // Poll every 5 seconds on error
+            });
+        }
+        
+        // Helper function to get status class
+        function getStatusClass(status) {
+            switch(status) {
+                case 'completed': return 'success';
+                case 'failed': return 'danger';
+                case 'processing': return 'warning';
+                default: return 'secondary';
+            }
         }
         
         // Load stats
