@@ -3,7 +3,7 @@ from django.db import models
 
 class Product(models.Model):
     sku = models.CharField(max_length=100, unique=True, db_index=True)
-    name = models.CharField(max_length=255)
+    name = models.TextField()
     description = models.TextField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
