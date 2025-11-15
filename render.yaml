@@ -7,10 +7,28 @@ services:
     healthCheckPath: /
     startCommand: "python wait-for-db.py && python manage.py migrate --noinput && gunicorn product_importer.wsgi:application --bind 0.0.0.0:8000"
     envVars:
-      - key: DATABASE_URL
+      - key: DB_USER
         fromDatabase:
           name: product-importer-db
-          property: connectionString
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: product-importer-db
+          property: password
+      - key: DB_HOST
+        fromDatabase:
+          name: product-importer-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: product-importer-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: product-importer-db
+          property: database
+      - key: DATABASE_URL
+        value: "postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
       - key: REDIS_URL
         fromService:
           name: product-importer-redis
@@ -27,10 +45,28 @@ services:
     dockerContext: .
     startCommand: "python wait-for-db.py && celery -A product_importer worker --loglevel=info"
     envVars:
-      - key: DATABASE_URL
+      - key: DB_USER
         fromDatabase:
           name: product-importer-db
-          property: connectionString
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: product-importer-db
+          property: password
+      - key: DB_HOST
+        fromDatabase:
+          name: product-importer-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: product-importer-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: product-importer-db
+          property: database
+      - key: DATABASE_URL
+        value: "postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
       - key: REDIS_URL
         fromService:
           name: product-importer-redis
