@@ -2,6 +2,11 @@
 
 A web application for importing large CSV files of products into a database with a focus on scalability and performance.
 
+
+Here is the demo of the app: 
+
+https://product-importer-87e8.onrender.com/
+
 ## Features
 
 - Upload large CSV files (up to 500,000 products) through a web interface
